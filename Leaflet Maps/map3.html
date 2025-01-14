@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Mobile Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,255,0,0.1); /* Green tint to verify coverage */
+            z-index: 1;
+        }
+        #debug-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
+            z-index: 1000;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<div id="debug-overlay"></div>
+
+<script>
+    // Comprehensive debug logging
+    function debugLog(message) {
+        console.log(message);
+        const debugOverlay = document.getElementById('debug-overlay');
+        debugOverlay.innerHTML += message + '<br>';
+    }
+
+    // Ensure full page load
+    window.addEventListener('load', function() {
+        debugLog('Window load event fired');
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        debugLog('DOM Content Loaded');
+
+        // Verify map container dimensions
+        const mapContainer = document.getElementById('map');
+        debugLog(`Map container size: ${mapContainer.offsetWidth}x${mapContainer.offsetHeight}`);
+        debugLog(`Map container style: width=${mapContainer.style.width}, height=${mapContainer.style.height}`);
+
+        try {
+            // Leaflet map initialization
+            const lat = -1.9437057;
+            const lng = 29.8805778;
+
+            const map = L.map('map', {
+                center: [lat, lng],
+                zoom: 18,
+                zoomControl: true,
+                attributionControl: true
+            });
+
+            debugLog('Leaflet map created');
+
+            // Add tile layer
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19,
+                minZoom: 7
+            }).addTo(map);
+
+            debugLog('Tile layer added');
+
+            // Add marker
+            L.marker([lat, lng]).addTo(map)
+                .bindPopup('Marker Location')
+                .openPopup();
+
+            debugLog('Marker added');
+
+            // Force map resize
+            map.invalidateSize();
+            debugLog('Map size invalidated');
+
+            // Additional diagnostic information
+            map.on('load', function() {
+                debugLog('Map load event fired');
+            });
+
+        } catch (error) {
+            debugLog(`Error: ${error.message}`);
+            console.error(error);
+        }
+    });
+
+    // Global error handling
+    window.addEventListener('error', function(event) {
+        debugLog(`Global error: ${event.message}`);
+    });
+</script>
+</body>
+</html>

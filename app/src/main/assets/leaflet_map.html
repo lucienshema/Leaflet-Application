@@ -8,8 +8,12 @@
     />
     <title>Farm Plot Map</title>
     <link
-            rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
+            rel="stylesheet"
+    />
+    <link
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+            rel="stylesheet"
     />
     <style>
         html,
@@ -19,7 +23,6 @@
           padding: 0;
           overflow: hidden;
         }
-
         #map {
           height: 100%;
           position: absolute;
@@ -29,7 +32,6 @@
           right: 0;
           z-index: 1;
         }
-
         .controls {
           position: absolute;
           bottom: 10px;
@@ -40,7 +42,6 @@
           border-radius: 5px;
           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-
         .map-types {
           position: absolute;
           top: 10px;
@@ -51,7 +52,6 @@
           border-radius: 5px;
           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-
         .info-panel {
           position: absolute;
           top: 20px;
@@ -95,22 +95,165 @@
           color: #ff4444;
           font-weight: bold;
         }
+
+        #mapTypesDropdown {
+          border: none;
+          border-radius: 4px;
+          padding: 10px;
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .dropdown-content {
+          display: none;
+          position: absolute;
+          top: 50px;
+          right: 0;
+          background-color: white;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          border-radius: 4px;
+          z-index: 1000;
+          flex-direction: column;
+          padding: 5px 0;
+        }
+
+        .dropdown-content button {
+          border: none;
+          padding: 10px;
+          text-align: left;
+          width: 100%;
+          cursor: pointer;
+        }
+
+        .dropdown-content button:hover {
+          background: #f0f0f0;
+        }
+
+        #customAlert {
+          display: none;
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 1000;
+          background-color: white;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #customAlert p {
+          margin: 0 0 20px;
+          font-size: 16px;
+          color: #333;
+        }
+
+        #customAlert button {
+          background-color: #4caf50;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          padding: 10px 20px;
+          cursor: pointer;
+        }
+
+        #overlay {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          z-index: 999;
+        }
     </style>
 </head>
 <body>
 <div id="map"></div>
-<div class="controls">
-    <button id="startCapture">Start Capture</button>
-    <button id="addPoint">Add Point</button>
-    <button id="deletePoint">Delete Last Point</button>
-    <button id="clearMap">Clear Map</button>
-    <button id="savePlot">Save Plot</button>
+<div class="controls" style="display: flex; align-items: center; gap: 10px">
+    <button
+            id="startCapture"
+            style="
+          background-color: #4caf50;
+          border: none;
+          border-radius: 4px;
+          padding: 10px;
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        "
+    >
+        <i class="fas fa-play"></i>
+    </button>
+    <button
+            id="savePlot"
+            style="
+          display: none;
+          background-color: #4caf50;
+          border: none;
+          border-radius: 4px;
+          padding: 10px;
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        "
+    >
+        <i class="fas fa-save"></i>
+    </button>
+    <button
+            id="addPoint"
+            title="Add Point"
+            style="
+          background-color: #4caf50;
+          border: none;
+          border-radius: 4px;
+          padding: 10px;
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        "
+    >
+        <i class="fa fa-plus" aria-hidden="true"></i>
+    </button>
+    <button
+            id="deletePoint"
+            title="Delete Last Point"
+            style="
+          background-color: #4caf50;
+          border: none;
+          border-radius: 4px;
+          padding: 10px;
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        "
+    >
+        <i class="fas fa-undo"></i>
+    </button>
+    <button
+            id="clearMap"
+            title="Clear Map"
+            style="
+          background-color: #4caf50;
+          border: none;
+          border-radius: 4px;
+          padding: 10px;
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        "
+    >
+        <i class="fas fa-trash"></i>
+    </button>
 </div>
+
 <div class="map-types">
-    <button id="streetView">Street View</button>
-    <button id="satelliteView">Satellite View</button>
-    <button id="terrainView">Terrain View</button>
+    <button id="mapTypesDropdown" class="dropdown-toggle">
+        <i class="fas fa-layer-group"></i>
+    </button>
+    <div id="dropdownContent" class="dropdown-content">
+        <button id="streetView">Street View</button>
+        <button id="satelliteView">Satellite View</button>
+        <button id="terrainView">Terrain View</button>
+    </div>
 </div>
+
 <div class="info-panel">
     <div id="plotInfo">Plot Size: 0 hectares</div>
     <div id="accuracy" class="accuracy">
@@ -118,6 +261,15 @@
     </div>
     <div id="warning" class="warning"></div>
 </div>
+
+<div id="customAlert" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
+    <p id="alertMessage" style="margin: 0 0 20px; font-size: 16px; color: #333; text-align: center;">Please start capture first</p>
+    <div style="display: flex; justify-content: center;">
+        <button id="alertOkButton" style="background-color: #4CAF50; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer;">OK</button>
+    </div>
+</div>
+<div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;"></div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
@@ -130,50 +282,48 @@
     let locationMarker = null;
     let watchId = null;
 
-    // Initialize map with default settings
-    // function initMap() {
-    //   map = L.map("map", {
-    //    center: [-1.9437057, 29.8805778],
-    //     zoom: 18,
-    //     attributionControl: true,
-    //   });
+    function showAlert(message) {
+      const alertBox = document.getElementById("customAlert");
+      const overlay = document.getElementById("overlay");
+      const alertMessage = document.getElementById("alertMessage");
+      const okButton = document.getElementById("alertOkButton");
 
-    //   // Default street view layer
-    //   window.streetLayer = L.tileLayer(
-    //     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    //     {
-    //       maxZoom: 19,
-    //       attribution: "© OpenStreetMap contributors",
-    //     }
-    //   ).addTo(map);
+      // Set the custom message
+      alertMessage.textContent = message;
 
-    //   // Satellite view layer
-    //   window.satelliteLayer = L.tileLayer(
-    //     "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
-    //     {
-    //       maxZoom: 19,
-    //       attribution:
-    //         "Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
-    //     }
-    //   );
+      // Show the alert and overlay
+      alertBox.style.display = "block";
+      overlay.style.display = "block";
 
-    //   // Terrain view layer
-    //   window.terrainLayer = L.tileLayer(
-    //     "https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}",
-    //     {
-    //       maxZoom: 18,
-    //       subdomains: "abcd",
-    //       attribution:
-    //         "Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under ODbL.",
-    //     }
-    //   );
+      // Close the alert when OK is clicked
+      okButton.onclick = function () {
+        alertBox.style.display = "none";
+        overlay.style.display = "none";
+      };
+    }
 
-    //   startLocationTracking();
-    // }
+
+
+    document
+      .getElementById("mapTypesDropdown")
+      .addEventListener("click", function () {
+        const dropdown = document.getElementById("dropdownContent");
+        dropdown.style.display =
+          dropdown.style.display === "block" ? "none" : "block";
+      });
+
+    // Close dropdown when clicking outside
+    window.addEventListener("click", function (event) {
+      const dropdown = document.getElementById("dropdownContent");
+      if (!event.target.matches("#mapTypesDropdown")) {
+        dropdown.style.display = "none";
+      }
+    });
+
     function initMap() {
       // Initialize map without a specific center
       map = L.map("map", {
-        zoom: 4, // Start with a zoomed-out view
+        zoom: 12, // Start with a zoomed-out view
         attributionControl: true,
       });
 
@@ -199,7 +349,7 @@
       window.terrainLayer = L.tileLayer(
         "https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}",
         {
-          maxZoom: 18,
+          maxZoom: 19,
           attribution: "© Google Maps",
         }
       );
@@ -221,7 +371,7 @@
           function (position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
-            const accuracy  = position.coords.accuracy;
+            const accuracy = position.coords.accuracy;
 
             // First center the map
             map.setView([lat, lon], 13, {
@@ -250,12 +400,12 @@
                   .addTo(map)
                   .bindPopup(
                     `
-            <b>Your Location:</b><br>
-            ${city ? city + ", " : ""}${country}<br>
-            <small>${lat.toFixed(4)}, ${lon.toFixed(4)}</small><br>
-             <small>Accuracy: ${accuracy.toFixed(1)} meters </small>
+          <b>Your Location:</b><br>
+          ${city ? city + ", " : ""}${country}<br>
+          <small>${lat.toFixed(4)}, ${lon.toFixed(4)}</small><br>
+           <small>Accuracy: ${accuracy.toFixed(1)} meters </small>
 
-          `
+        `
                   )
                   .openPopup();
               })
@@ -431,25 +581,33 @@
         .getElementById("startCapture")
         .addEventListener("click", () => {
           isCapturing = !isCapturing;
-          const button = document.getElementById("startCapture");
+
+          const startButton = document.getElementById("startCapture");
+          const saveButton = document.getElementById("savePlot");
+
           if (isCapturing) {
             points = [];
             if (polygon) map.removeLayer(polygon);
             if (polyline) map.removeLayer(polyline);
             polygon = L.polygon([]).addTo(map);
             polyline = L.polyline([]).addTo(map);
-            button.textContent = "Stop Capture";
-            button.style.backgroundColor = "#ff4444";
+
+            // Set Start/Stop button to Stop state
+            startButton.innerHTML = '<i class="fas fa-stop"></i>';
+            startButton.style.backgroundColor = "#ff4444";
           } else {
-            button.textContent = "Start Capture";
-            button.style.backgroundColor = "#4CAF50";
+            // Hide Start/Stop button and show Save button
+            startButton.style.display = "none";
+            saveButton.style.display = "block";
           }
         });
 
       // Modify the addPoint click handler
       document.getElementById("addPoint").addEventListener("click", () => {
         if (!isCapturing) {
-          alert("Please start capture first");
+          // alert("Please start capture first");
+          // Example usage
+          showAlert("Please start capture first");
           return;
         }
 
@@ -507,6 +665,7 @@
         updatePlotInfo();
       });
 
+      // Save plot functionality
       document.getElementById("savePlot").addEventListener("click", () => {
         if (points.length < 3) {
           alert("Please capture at least 3 points to form a valid polygon");
@@ -522,6 +681,15 @@
           points: points,
           accuracy: currentAccuracy,
         };
+
+        // Reset buttons after saving
+        const startButton = document.getElementById("startCapture");
+        const saveButton = document.getElementById("savePlot");
+
+        saveButton.style.display = "none"; // Hide Save button
+        startButton.style.display = "block"; // Show Start button again
+        startButton.innerHTML = '<i class="fas fa-play"></i>'; // Reset to Start Capture state
+        startButton.style.backgroundColor = "#4CAF50";
 
         console.log("Plot data:", plotData);
         // Here you would typically send this data to your backend

@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-kapt")
 }
 
 android {
@@ -41,6 +42,8 @@ android {
 
 dependencies {
 
+    val room_version = "2.6.1"
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -53,6 +56,19 @@ dependencies {
     implementation("androidx.webkit:webkit:1.5.0")
     implementation("androidx.appcompat:appcompat:1.5.1")
 
+
+    implementation(libs.play.services.maps)
+    implementation(libs.firebase.functions.ktx)
+
+    implementation("com.google.code.gson:gson:2.10.1")
+
+
+
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")  // For Kotlin coroutines support
+    kapt("androidx.room:room-compiler:$room_version")
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -61,3 +77,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
+//kapt {
+//    correctErrorTypes = true
+//}

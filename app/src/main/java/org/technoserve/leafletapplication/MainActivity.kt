@@ -24,10 +24,39 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.lifecycleScope
+import com.google.gson.Gson
+import kotlinx.coroutines.launch
+import org.technoserve.leafletapplication.map.PlotData
+import org.technoserve.leafletapplication.map.PlotDatabase
+import org.technoserve.leafletapplication.map.PlotEntity
 import java.io.File
 import java.net.URLConnection
 
 var loadURL = "file:///android_asset/leaflet_map.html"
+
+
+// JavaScript Interface
+class JavaScriptInterface(private val context: Context) {
+
+    @android.webkit.JavascriptInterface
+    fun saveDataToRoom(plotDataJson: String) {
+        val plotData = Gson().fromJson(plotDataJson, PlotData::class.java)
+
+        (context as MainActivity).lifecycleScope.launch {
+            val plotDao = PlotDatabase.getDatabase(context).plotDao()
+            val plotEntity = PlotEntity(
+                area = plotData.area,
+                centroidLat = plotData.centroidLat,
+                centroidLng = plotData.centroidLng,
+                points = Gson().toJson(plotData.points), // Convert list to JSON string
+                accuracy = plotData.accuracy
+            )
+            plotDao.insertPlot(plotEntity)
+        }
+    }
+
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,6 +124,9 @@ fun WebViewPage(url: String) {
                         callback.invoke(origin, true, false)
                     }
                 }
+
+                // Attach JavaScript interface
+                addJavascriptInterface(JavaScriptInterface(context), "Android")
 
                 webViewClient = object : WebViewClient() {
                     override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {

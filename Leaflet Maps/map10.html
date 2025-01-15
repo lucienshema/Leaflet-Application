@@ -30,9 +30,19 @@
         bottom: 0;
         left: 0;
         right: 0;
-        
         z-index: 1;
       }
+      /* .controls {
+          position: absolute;
+          bottom: 10px;
+          left: 10px;
+          z-index: 1000;
+          background-color: rgba(255, 255, 255, 0.9);
+          padding: 10px;
+          border-radius: 5px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+          width: 100%;
+        } */
 
       .controls {
         position: fixed; /* Ensure it stays fixed relative to the viewport */
@@ -64,18 +74,18 @@
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
       }
       /* .info-panel {
-        position: absolute;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 1000;
-        background-color: rgba(255, 255, 255, 0.9);
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        text-align: center;
-        min-width: 200px;
-      } */
+          position: absolute;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 1000;
+          background-color: rgba(255, 255, 255, 0.9);
+          padding: 10px;
+          border-radius: 5px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+          text-align: center;
+          min-width: 200px;
+        } */
 
       .info-panel {
         position: fixed; /* Use fixed to ensure it stays centered even on scroll */
@@ -304,7 +314,6 @@
           max-width: 200px; /* Optional: Limit button width */
           color: #ffffff; /* Ensure text/icon is visible */
           font-size: 18px; /* Increase icon size */
-    
         "
       >
         <i class="fas fa-undo"></i>
@@ -536,12 +545,12 @@
                     .addTo(map)
                     .bindPopup(
                       `
-          <b>Your Location:</b><br>
-          ${city ? city + ", " : ""}${country}<br>
-          <small>${lat.toFixed(4)}, ${lon.toFixed(4)}</small><br>
-           <small>Accuracy: ${accuracy.toFixed(1)} meters </small>
+        <b>Your Location:</b><br>
+        ${city ? city + ", " : ""}${country}<br>
+        <small>${lat.toFixed(4)}, ${lon.toFixed(4)}</small><br>
+         <small>Accuracy: ${accuracy.toFixed(1)} meters </small>
 
-        `
+      `
                     )
                     .openPopup();
                 })
@@ -811,6 +820,13 @@
           const area = calculateArea(points);
           const centroid = calculateCentroid(points);
 
+          setTimeout(() => {
+            const farmerName = Android.getFarmerName();
+            const plotAddress = Android.getPlotAddress();
+            console.log("Farmer Name: ", farmerName);
+            console.log("Plot Address: ", plotAddress);
+          }, 500); // Adjust delay if necessary
+
           const plotData = {
             name: "Polygon " + new Date().toISOString(), // Name with timestamp
             area: area,
@@ -818,17 +834,12 @@
             centroidLng: centroid.lng,
             accuracy: currentAccuracy,
             points: points.map((point) => ({ lat: point.lat, lng: point.lng })), // Convert LatLng to plain objects
+            farmerName: farmerName,
+            plotAddress: plotAddress,
           };
 
-          // Save to Room database
-          savePolygonToDatabase(
-            plotData.name,
-            plotData.area,
-            plotData.centroidLat,
-            plotData.centroidLng,
-            plotData.accuracy,
-            plotData.points
-          );
+          // Send data to Android (using a JavaScript interface)
+          window.Android.saveDataToRoom(JSON.stringify(plotData));
 
           // Reset buttons after saving
           const startButton = document.getElementById("startCapture");
@@ -847,94 +858,7 @@
             )}, ${centroid.lng.toFixed(6)}`
           );
         });
-
-        function loadSavedPlot() {
-          loadPolygonsFromDatabase((polygons) => {
-            polygons.forEach((polygonEntity) => {
-              // Restore the points array from JSON
-              const points = parsePoints(polygonEntity.points);
-
-              // Draw the polygon and polyline
-              const polygon = L.polygon(points, { color: "blue" }).addTo(map);
-              const polyline = L.polyline(points, { color: "blue" }).addTo(map);
-
-              // Zoom to fit the last loaded polygon
-              map.fitBounds(polygon.getBounds());
-
-              // Display plot info
-              document.getElementById(
-                "plotInfo"
-              ).textContent = `Plot Size: ${polygonEntity.area.toFixed(
-                2
-              )} hectares`;
-              document.getElementById(
-                "warning"
-              ).textContent = `Centroid: ${polygonEntity.centroidLat.toFixed(
-                6
-              )}, ${polygonEntity.centroidLng.toFixed(6)}`;
-            });
-          });
-        }
-
-        function savePolygonToDatabase(
-          name,
-          area,
-          centroidLat,
-          centroidLng,
-          accuracy,
-          points
-        ) {
-          const pointsJson = JSON.stringify(points); // Convert points list to JSON string
-
-          // Use an API or WebSocket to send data to the backend where the Room database is managed
-          fetch("/savePolygon", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name,
-              area,
-              centroidLat,
-              centroidLng,
-              accuracy,
-              points: pointsJson,
-            }),
-          })
-            .then((response) => response.json())
-            .then((data) => console.log("Polygon saved:", data))
-            .catch((error) => console.error("Error saving polygon:", error));
-        }
-
-        function loadPolygonsFromDatabase(onLoaded) {
-          // Fetch data from the backend
-          fetch("/getPolygons", {
-            method: "GET",
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              console.log("Polygons loaded:", data);
-              onLoaded(data);
-            })
-            .catch((error) => console.error("Error loading polygons:", error));
-        }
-
-        function parsePoints(json) {
-          return json.map((point) => L.latLng(point.lat, point.lng));
-        }
       });
     </script>
   </body>
 </html>
-
-<!-- examples of data captured 
-
-
-[{"lat":-1.9548488922085672,"lng":30.079713993564045},{"lat":-1.9552101529937642,"lng":30.079691782998346},{"lat":-1.955319411327019,"lng":30.07927227945658}]
-
-[{"lat":-1.955248054216114,"lng":30.081050998375275},{"lat":-1.955980860642687,"lng":30.081190999665885},{"lat":-1.9566328315535542,"lng":30.080398909777774},{"lat":-1.9569556934632055,"lng":30.07987387797687},{"lat":-1.9567278011586737,"lng":30.079381026860926},{"lat":-1.9562061496511314,"lng":30.078732781112194}]
-
-
-[{"lat":-1.9547976240550407,"lng":30.079555192574997}
-,{"lat":-1.9548090640374667,"lng":30.080662823700276},
-{"lat":-1.9552415166899162,"lng":30.08104974939318},
-{"lat":-1.955970622720756,"lng":30.08118904373014},
-{"lat":-1.9562383098395073,"lng":30.081040473368372}] -->

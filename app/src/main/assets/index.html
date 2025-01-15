@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plot Visualization</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+        }
+
+        #header {
+          text-align: center;
+          padding: 10px;
+          background-color: #f4f4f4;
+          border-bottom: 1px solid #ddd;
+        }
+
+        #map {
+          height: 90vh;
+          width: 100%;
+        }
+
+        #status {
+          text-align: center;
+          padding: 10px;
+          background-color: #e7f5e9;
+          border-top: 1px solid #ddd;
+          color: #333;
+          font-weight: bold;
+        }
+
+        #status.error {
+          background-color: #fbeaea;
+          color: #a94442;
+        }
+    </style>
+</head>
+<body>
+<div id="header">
+    <h1>Plot Visualization</h1>
+</div>
+<div id="map"></div>
+<div id="status">Loading map...</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      if (typeof Android !== "undefined" && Android.getPlots) {
+        // Fetch plots from the Android database
+        const plotsJson = Android.getPlots();
+        console.log("Plots fetched from Android:", plotsJson);
+
+        // Visualize the data
+        visualizeData(plotsJson);
+      } else {
+        console.error("Android interface is not available.");
+      }
+    });
+
+    function visualizeData(data) {
+      const statusElement = document.getElementById("status");
+      console.log("Data received:", data);
+
+      try {
+        const parsedData = JSON.parse(data); // Parse the main JSON string
+        console.log("Parsed data:", parsedData);
+
+        // Initialize the map centered on the first plot's centroid
+        const map = L.map("map").setView(
+          [parsedData[0].centroidLat, parsedData[0].centroidLng],
+          13
+        );
+
+        // Add a tile layer to the map
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: "&copy; OpenStreetMap contributors",
+        }).addTo(map);
+
+        // Loop through each plot and visualize it
+        parsedData.forEach((plot, index) => {
+          // Parse the points field, which is a JSON string
+          const latlngs = JSON.parse(plot.points).map((point) => [
+            point.lat,
+            point.lng,
+          ]);
+
+          // Draw the polygon on the map
+          const polygon = L.polygon(latlngs, { color: "blue" }).addTo(map);
+
+          // Bind a popup to display metadata when the polygon is clicked
+          polygon.bindPopup(`
+              <b>Plot ${index + 1}</b><br>
+              Area: ${plot.area.toFixed(2)} sq units<br>
+              Accuracy: ${plot.accuracy.toFixed(2)}
+          `);
+
+          // Add a marker at the centroid
+          L.marker([plot.centroidLat, plot.centroidLng]).addTo(map)
+            .bindPopup(`
+                  <b>Centroid</b><br>
+                  Latitude: ${plot.centroidLat.toFixed(5)}<br>
+                  Longitude: ${plot.centroidLng.toFixed(5)}
+              `);
+        });
+
+        // Update status to indicate the map is loaded successfully
+        statusElement.textContent = "Map loaded successfully!";
+        statusElement.classList.remove("error");
+      } catch (error) {
+        // Handle and display errors
+        statusElement.textContent = `Error loading map: ${error.message}`;
+        statusElement.classList.add("error");
+        console.error("Error visualizing data:", error);
+      }
+    }
+</script>
+</body>
+</html>

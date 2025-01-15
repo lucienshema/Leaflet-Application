@@ -822,6 +822,28 @@
         const area = calculateArea(points);
         const centroid = calculateCentroid(points);
 
+        // Function that will be called from Android
+function setFarmerDetails(farmerName, plotAddress) {
+    // Handle the received data
+    console.log("Received:", farmerName, plotAddress);
+}
+
+
+    setTimeout(() => {
+    const farmerName = window.Android.getFarmerName();
+    const plotAddress = window.Android.getPlotAddress();
+    console.log("Farmer Name: ", farmerName);
+    console.log("Plot Address: ", plotAddress);
+}, 500); // Adjust delay if necessary
+
+
+    if (!farmerName || !plotAddress) {
+        console.error("Farmer Name or Plot Address is empty.");
+        return;
+    }
+
+
+
         const plotData = {
           name: "Polygon " + new Date().toISOString(), // Name with timestamp
           area: area,
@@ -829,17 +851,12 @@
           centroidLng: centroid.lng,
           accuracy: currentAccuracy,
           points: points.map((point) => ({ lat: point.lat, lng: point.lng })), // Convert LatLng to plain objects
+          farmerName: farmerName,
+          plotAddress: plotAddress,
         };
 
-        // Save to Room database
-        savePolygonToDatabase(
-          plotData.name,
-          plotData.area,
-          plotData.centroidLat,
-          plotData.centroidLng,
-          plotData.accuracy,
-          plotData.points
-        );
+          // Send data to Android (using a JavaScript interface)
+         window.Android.saveDataToRoom(JSON.stringify(plotData));
 
         // Reset buttons after saving
         const startButton = document.getElementById("startCapture");
@@ -858,94 +875,11 @@
           )}, ${centroid.lng.toFixed(6)}`
         );
       });
-
-      function loadSavedPlot() {
-        loadPolygonsFromDatabase((polygons) => {
-          polygons.forEach((polygonEntity) => {
-            // Restore the points array from JSON
-            const points = parsePoints(polygonEntity.points);
-
-            // Draw the polygon and polyline
-            const polygon = L.polygon(points, { color: "blue" }).addTo(map);
-            const polyline = L.polyline(points, { color: "blue" }).addTo(map);
-
-            // Zoom to fit the last loaded polygon
-            map.fitBounds(polygon.getBounds());
-
-            // Display plot info
-            document.getElementById(
-              "plotInfo"
-            ).textContent = `Plot Size: ${polygonEntity.area.toFixed(
-              2
-            )} hectares`;
-            document.getElementById(
-              "warning"
-            ).textContent = `Centroid: ${polygonEntity.centroidLat.toFixed(
-              6
-            )}, ${polygonEntity.centroidLng.toFixed(6)}`;
-          });
-        });
-      }
-
-      function savePolygonToDatabase(
-        name,
-        area,
-        centroidLat,
-        centroidLng,
-        accuracy,
-        points
-      ) {
-        const pointsJson = JSON.stringify(points); // Convert points list to JSON string
-
-        // Use an API or WebSocket to send data to the backend where the Room database is managed
-        fetch("/savePolygon", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            area,
-            centroidLat,
-            centroidLng,
-            accuracy,
-            points: pointsJson,
-          }),
-        })
-          .then((response) => response.json())
-          .then((data) => console.log("Polygon saved:", data))
-          .catch((error) => console.error("Error saving polygon:", error));
-      }
-
-      function loadPolygonsFromDatabase(onLoaded) {
-        // Fetch data from the backend
-        fetch("/getPolygons", {
-          method: "GET",
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log("Polygons loaded:", data);
-            onLoaded(data);
-          })
-          .catch((error) => console.error("Error loading polygons:", error));
-      }
-
-      function parsePoints(json) {
-        return json.map((point) => L.latLng(point.lat, point.lng));
-      }
     });
+
+
+
 </script>
 </body>
 </html>
 
-<!-- examples of data captured
-
-
-[{"lat":-1.9548488922085672,"lng":30.079713993564045},{"lat":-1.9552101529937642,"lng":30.079691782998346},{"lat":-1.955319411327019,"lng":30.07927227945658}]
-
-[{"lat":-1.955248054216114,"lng":30.081050998375275},{"lat":-1.955980860642687,"lng":30.081190999665885},{"lat":-1.9566328315535542,"lng":30.080398909777774},{"lat":-1.9569556934632055,"lng":30.07987387797687},{"lat":-1.9567278011586737,"lng":30.079381026860926},{"lat":-1.9562061496511314,"lng":30.078732781112194}]
-
-
-[{"lat":-1.9547976240550407,"lng":30.079555192574997}
-,{"lat":-1.9548090640374667,"lng":30.080662823700276},
-{"lat":-1.9552415166899162,"lng":30.08104974939318},
-{"lat":-1.955970622720756,"lng":30.08118904373014},
-{"lat":-1.9562383098395073,"lng":30.081040473368372}] -->

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,7 +33,7 @@
           right: 0;
           z-index: 1;
         }
-        .controls {
+        /* .controls {
           position: absolute;
           bottom: 10px;
           left: 10px;
@@ -41,18 +42,39 @@
           padding: 10px;
           border-radius: 5px;
           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+          width: 100%;
+        } */
+
+        .controls {
+          position: fixed; /* Ensure it stays fixed relative to the viewport */
+          bottom: 0; /* Stick to the bottom of the screen */
+          left: 0; /* Align to the left edge */
+          z-index: 1000;
+          background-color: rgba(
+            255,
+            255,
+            255,
+            0.9
+          ); /* Semi-transparent background */
+          padding: 10px;
+          border-radius: 0; /* Remove any rounding for full-width appearance */
+          box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2); /* Optional: Shadow at the top edge */
+          width: 100vw; /* Full viewport width */
+          height: auto; /* Ensure it adjusts based on content */
         }
+
         .map-types {
           position: absolute;
+          display: inline-block;
           top: 10px;
           right: 10px;
           z-index: 1000;
           background-color: rgba(255, 255, 255, 0.9);
-          padding: 10px;
+          padding: 5px;
           border-radius: 5px;
           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-        .info-panel {
+        /* .info-panel {
           position: absolute;
           top: 20px;
           left: 50%;
@@ -64,6 +86,32 @@
           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
           text-align: center;
           min-width: 200px;
+        } */
+
+        .info-panel {
+          position: fixed; /* Use fixed to ensure it stays centered even on scroll */
+          top: 20px; /* Distance from the top */
+          left: 50%; /* Center horizontally */
+          transform: translateX(-50%); /* Adjust for centering */
+          z-index: 1000; /* Ensure it appears above other elements */
+          background-color: rgba(
+            255,
+            255,
+            255,
+            0.9
+          ); /* Semi-transparent background */
+          padding: 10px;
+          border-radius: 5px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Add subtle shadow for better visibility */
+          text-align: center;
+          min-width: 200px;
+          max-width: 90%; /* Ensure it doesn't exceed the viewport width */
+          box-sizing: border-box; /* Include padding in width calculation */
+        }
+
+        /* Add spacing to ensure it doesn't overlap with other elements */
+        .info-panel + * {
+          margin-top: 10px; /* Add a gap between the info panel and any elements directly below it */
         }
 
         button {
@@ -99,6 +147,7 @@
         #mapTypesDropdown {
           border: none;
           border-radius: 4px;
+          background-color: #000000;
           padding: 10px;
           cursor: pointer;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -107,26 +156,53 @@
         .dropdown-content {
           display: none;
           position: absolute;
-          top: 50px;
+          top: 100%;
           right: 0;
-          background-color: white;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+          color: #000000;
+          background-color: #cccccc;
+          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+          z-index: 1;
           border-radius: 4px;
-          z-index: 1000;
           flex-direction: column;
-          padding: 5px 0;
+          padding: 0; /* Remove padding from dropdown container */
+          box-sizing: border-box; /* Ensure padding and border are included in size */
+          width: 150px; /* Set a specific width for consistency */
         }
 
         .dropdown-content button {
+          background: none;
           border: none;
           padding: 10px;
+          color: #000000;
+          background-color: #cccccc;
           text-align: left;
-          width: 100%;
+          display: flex;
+          align-items: center;
+          width: 100%; /* Ensure button width matches dropdown container */
           cursor: pointer;
+          box-sizing: border-box; /* Include padding/border in width */
+        }
+
+        .dropdown-toggle {
+          margin-left: auto;
+          background: none;
+          border: none;
+          font-size: 20px;
+          cursor: pointer;
+          padding: 0;
         }
 
         .dropdown-content button:hover {
           background: #f0f0f0;
+        }
+
+        .dropdown-content button i {
+          margin-right: 8px;
+          font-size: 16px;
+        }
+
+        .map-types:hover .dropdown-content {
+          display: block;
         }
 
         #customAlert {
@@ -175,12 +251,16 @@
     <button
             id="startCapture"
             style="
-          background-color: #4caf50;
+          background-color: #000000;
           border: none;
           border-radius: 4px;
           padding: 10px;
           cursor: pointer;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          flex: 1; /* Allow the button to grow and fill available space */
+          max-width: 200px; /* Optional: Limit button width */
+          color: #ffffff; /* Ensure text/icon is visible */
+          font-size: 18px; /* Increase icon size */
         "
     >
         <i class="fas fa-play"></i>
@@ -188,13 +268,17 @@
     <button
             id="savePlot"
             style="
+          background-color: #000000;
           display: none;
-          background-color: #4caf50;
           border: none;
           border-radius: 4px;
           padding: 10px;
           cursor: pointer;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          flex: 1; /* Allow the button to grow and fill available space */
+          max-width: 200px; /* Optional: Limit button width */
+          color: #ffffff; /* Ensure text/icon is visible */
+          font-size: 18px; /* Increase icon size */
         "
     >
         <i class="fas fa-save"></i>
@@ -203,12 +287,16 @@
             id="addPoint"
             title="Add Point"
             style="
-          background-color: #4caf50;
+          background-color: #000000;
           border: none;
           border-radius: 4px;
           padding: 10px;
           cursor: pointer;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          flex: 1; /* Allow the button to grow and fill available space */
+          max-width: 200px; /* Optional: Limit button width */
+          color: #ffffff; /* Ensure text/icon is visible */
+          font-size: 18px; /* Increase icon size */
         "
     >
         <i class="fa fa-plus" aria-hidden="true"></i>
@@ -217,12 +305,17 @@
             id="deletePoint"
             title="Delete Last Point"
             style="
-          background-color: #4caf50;
+          background-color: #000000;
           border: none;
           border-radius: 4px;
           padding: 10px;
           cursor: pointer;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          flex: 1; /* Allow the button to grow and fill available space */
+          max-width: 200px; /* Optional: Limit button width */
+          color: #ffffff; /* Ensure text/icon is visible */
+          font-size: 18px; /* Increase icon size */
+
         "
     >
         <i class="fas fa-undo"></i>
@@ -231,12 +324,17 @@
             id="clearMap"
             title="Clear Map"
             style="
-          background-color: #4caf50;
+          background-color: #e60c0c;
           border: none;
           border-radius: 4px;
           padding: 10px;
           cursor: pointer;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          flex: 1; /* Allow the button to grow and fill available space */
+          max-width: 200px; /* Optional: Limit button width */
+          color: #ffffff; /* Ensure text/icon is visible */
+          font-size: 18px; /* Increase icon size */
+          margin-right: 20px;
         "
     >
         <i class="fas fa-trash"></i>
@@ -248,28 +346,79 @@
         <i class="fas fa-layer-group"></i>
     </button>
     <div id="dropdownContent" class="dropdown-content">
-        <button id="streetView">Street View</button>
-        <button id="satelliteView">Satellite View</button>
-        <button id="terrainView">Terrain View</button>
+        <button id="streetView">
+            <i class="fas fa-street-view"></i> Street View
+        </button>
+        <button id="satelliteView">
+            <i class="fas fa-satellite"></i> Satellite View
+        </button>
+        <button id="terrainView">
+            <i class="fas fa-mountain"></i> Terrain View
+        </button>
     </div>
 </div>
 
 <div class="info-panel">
     <div id="plotInfo">Plot Size: 0 hectares</div>
-    <div id="accuracy" class="accuracy">
-        Location Accuracy: Calculating...
-    </div>
+    <div id="accuracy" class="accuracy">Accuracy: Calculating...</div>
     <div id="warning" class="warning"></div>
 </div>
 
-<div id="customAlert" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
-    <p id="alertMessage" style="margin: 0 0 20px; font-size: 16px; color: #333; text-align: center;">Please start capture first</p>
-    <div style="display: flex; justify-content: center;">
-        <button id="alertOkButton" style="background-color: #4CAF50; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer;">OK</button>
+<div
+        id="customAlert"
+        style="
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      "
+>
+    <p
+            id="alertMessage"
+            style="
+          margin: 0 0 20px;
+          font-size: 16px;
+          color: #333;
+          text-align: center;
+        "
+    >
+        Please start capture first
+    </p>
+    <div style="display: flex; justify-content: center">
+        <button
+                id="alertOkButton"
+                style="
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+          "
+        >
+            OK
+        </button>
     </div>
 </div>
-<div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;"></div>
-
+<div
+        id="overlay"
+        style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      "
+></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
@@ -301,8 +450,6 @@
         overlay.style.display = "none";
       };
     }
-
-
 
     document
       .getElementById("mapTypesDropdown")
@@ -400,12 +547,12 @@
                   .addTo(map)
                   .bindPopup(
                     `
-          <b>Your Location:</b><br>
-          ${city ? city + ", " : ""}${country}<br>
-          <small>${lat.toFixed(4)}, ${lon.toFixed(4)}</small><br>
-           <small>Accuracy: ${accuracy.toFixed(1)} meters </small>
+        <b>Your Location:</b><br>
+        ${city ? city + ", " : ""}${country}<br>
+        <small>${lat.toFixed(4)}, ${lon.toFixed(4)}</small><br>
+         <small>Accuracy: ${accuracy.toFixed(1)} meters </small>
 
-        `
+      `
                   )
                   .openPopup();
               })
@@ -469,7 +616,7 @@
 
       document.getElementById(
         "accuracy"
-      ).textContent = `Location Accuracy: ${accuracy.toFixed(1)} meters`;
+      ).textContent = `Accuracy: ${accuracy.toFixed(1)} meters`;
 
       if (locationMarker) {
         map.removeLayer(locationMarker);
@@ -486,7 +633,7 @@
     function handleLocationError(error) {
       console.error("Geolocation error:", error);
       document.getElementById("accuracy").textContent =
-        "Location accuracy: Unable to determine";
+        "Accuracy: Unable to determine";
     }
 
     // Calculate area of polygon in hectares
@@ -632,7 +779,7 @@
           1
         )}m)`;
         setTimeout(() => {
-          feedbackDiv.textContent = `Location Accuracy: ${currentAccuracy.toFixed(
+          feedbackDiv.textContent = `Accuracy: ${currentAccuracy.toFixed(
             1
           )} meters`;
         }, 2000);
@@ -667,45 +814,138 @@
 
       // Save plot functionality
       document.getElementById("savePlot").addEventListener("click", () => {
-    if (points.length < 3) {
-        alert("Please capture at least 3 points to form a valid polygon");
-        return;
-    }
+        if (points.length < 3) {
+          alert("Please capture at least 3 points to form a valid polygon");
+          return;
+        }
 
-    const area = calculateArea(points);
-    const centroid = calculateCentroid(points);
+        const area = calculateArea(points);
+        const centroid = calculateCentroid(points);
 
-    const plotData = {
-        name: "Polygon " + new Date().toISOString(), // Name with timestamp
-        area: area,
-        centroidLat: centroid.lat,
-        centroidLng: centroid.lng,
-        accuracy: currentAccuracy,
-        points: points.map((point) => ({ lat: point.lat, lng: point.lng })), // Convert LatLng to plain objects
-    };
+        const plotData = {
+          name: "Polygon " + new Date().toISOString(), // Name with timestamp
+          area: area,
+          centroidLat: centroid.lat,
+          centroidLng: centroid.lng,
+          accuracy: currentAccuracy,
+          points: points.map((point) => ({ lat: point.lat, lng: point.lng })), // Convert LatLng to plain objects
+        };
 
-     // Send data to Android (using a JavaScript interface)
-    window.Android.saveDataToRoom(JSON.stringify(plotData));
+        // Save to Room database
+        savePolygonToDatabase(
+          plotData.name,
+          plotData.area,
+          plotData.centroidLat,
+          plotData.centroidLng,
+          plotData.accuracy,
+          plotData.points
+        );
 
-    // Reset buttons after saving
-    const startButton = document.getElementById("startCapture");
-    const saveButton = document.getElementById("savePlot");
+        // Reset buttons after saving
+        const startButton = document.getElementById("startCapture");
+        const saveButton = document.getElementById("savePlot");
 
-    saveButton.style.display = "none"; // Hide Save button
-    startButton.style.display = "block"; // Show Start button again
-    startButton.innerHTML = '<i class="fas fa-play"></i>'; // Reset to Start Capture state
-    startButton.style.backgroundColor = "#4CAF50";
+        saveButton.style.display = "none"; // Hide Save button
+        startButton.style.display = "block"; // Show Start button again
+        startButton.innerHTML = '<i class="fas fa-play"></i>'; // Reset to Start Capture state
+        startButton.style.backgroundColor = "#4CAF50";
 
-    alert(
-        `Plot saved successfully!\nArea: ${area.toFixed(
+        alert(
+          `Plot saved successfully!\nArea: ${area.toFixed(
             2
-        )} hectares\nCentroid: ${centroid.lat.toFixed(
+          )} hectares\nCentroid: ${centroid.lat.toFixed(
             6
-        )}, ${centroid.lng.toFixed(6)}`
-    );
-});
+          )}, ${centroid.lng.toFixed(6)}`
+        );
+      });
 
+      function loadSavedPlot() {
+        loadPolygonsFromDatabase((polygons) => {
+          polygons.forEach((polygonEntity) => {
+            // Restore the points array from JSON
+            const points = parsePoints(polygonEntity.points);
+
+            // Draw the polygon and polyline
+            const polygon = L.polygon(points, { color: "blue" }).addTo(map);
+            const polyline = L.polyline(points, { color: "blue" }).addTo(map);
+
+            // Zoom to fit the last loaded polygon
+            map.fitBounds(polygon.getBounds());
+
+            // Display plot info
+            document.getElementById(
+              "plotInfo"
+            ).textContent = `Plot Size: ${polygonEntity.area.toFixed(
+              2
+            )} hectares`;
+            document.getElementById(
+              "warning"
+            ).textContent = `Centroid: ${polygonEntity.centroidLat.toFixed(
+              6
+            )}, ${polygonEntity.centroidLng.toFixed(6)}`;
+          });
+        });
+      }
+
+      function savePolygonToDatabase(
+        name,
+        area,
+        centroidLat,
+        centroidLng,
+        accuracy,
+        points
+      ) {
+        const pointsJson = JSON.stringify(points); // Convert points list to JSON string
+
+        // Use an API or WebSocket to send data to the backend where the Room database is managed
+        fetch("/savePolygon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            area,
+            centroidLat,
+            centroidLng,
+            accuracy,
+            points: pointsJson,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => console.log("Polygon saved:", data))
+          .catch((error) => console.error("Error saving polygon:", error));
+      }
+
+      function loadPolygonsFromDatabase(onLoaded) {
+        // Fetch data from the backend
+        fetch("/getPolygons", {
+          method: "GET",
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Polygons loaded:", data);
+            onLoaded(data);
+          })
+          .catch((error) => console.error("Error loading polygons:", error));
+      }
+
+      function parsePoints(json) {
+        return json.map((point) => L.latLng(point.lat, point.lng));
+      }
     });
 </script>
 </body>
 </html>
+
+<!-- examples of data captured
+
+
+[{"lat":-1.9548488922085672,"lng":30.079713993564045},{"lat":-1.9552101529937642,"lng":30.079691782998346},{"lat":-1.955319411327019,"lng":30.07927227945658}]
+
+[{"lat":-1.955248054216114,"lng":30.081050998375275},{"lat":-1.955980860642687,"lng":30.081190999665885},{"lat":-1.9566328315535542,"lng":30.080398909777774},{"lat":-1.9569556934632055,"lng":30.07987387797687},{"lat":-1.9567278011586737,"lng":30.079381026860926},{"lat":-1.9562061496511314,"lng":30.078732781112194}]
+
+
+[{"lat":-1.9547976240550407,"lng":30.079555192574997}
+,{"lat":-1.9548090640374667,"lng":30.080662823700276},
+{"lat":-1.9552415166899162,"lng":30.08104974939318},
+{"lat":-1.955970622720756,"lng":30.08118904373014},
+{"lat":-1.9562383098395073,"lng":30.081040473368372}] -->

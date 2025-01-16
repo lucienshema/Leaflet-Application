@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,16 +33,16 @@
           z-index: 1;
         }
         /* .controls {
-          position: absolute;
-          bottom: 10px;
-          left: 10px;
-          z-index: 1000;
-          background-color: rgba(255, 255, 255, 0.9);
-          padding: 10px;
-          border-radius: 5px;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-          width: 100%;
-        } */
+              position: absolute;
+              bottom: 10px;
+              left: 10px;
+              z-index: 1000;
+              background-color: rgba(255, 255, 255, 0.9);
+              padding: 10px;
+              border-radius: 5px;
+              box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+              width: 100%;
+            } */
 
         .controls {
           position: fixed; /* Ensure it stays fixed relative to the viewport */
@@ -75,18 +74,18 @@
           box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
         /* .info-panel {
-          position: absolute;
-          top: 20px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 1000;
-          background-color: rgba(255, 255, 255, 0.9);
-          padding: 10px;
-          border-radius: 5px;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-          text-align: center;
-          min-width: 200px;
-        } */
+              position: absolute;
+              top: 20px;
+              left: 50%;
+              transform: translateX(-50%);
+              z-index: 1000;
+              background-color: rgba(255, 255, 255, 0.9);
+              padding: 10px;
+              border-radius: 5px;
+              box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+              text-align: center;
+              min-width: 200px;
+            } */
 
         .info-panel {
           position: fixed; /* Use fixed to ensure it stays centered even on scroll */
@@ -315,7 +314,6 @@
           max-width: 200px; /* Optional: Limit button width */
           color: #ffffff; /* Ensure text/icon is visible */
           font-size: 18px; /* Increase icon size */
-
         "
     >
         <i class="fas fa-undo"></i>
@@ -339,6 +337,8 @@
     >
         <i class="fas fa-trash"></i>
     </button>
+
+    <button id="sendButton">Send Data to Android</button>
 </div>
 
 <div class="map-types">
@@ -547,12 +547,12 @@
                   .addTo(map)
                   .bindPopup(
                     `
-        <b>Your Location:</b><br>
-        ${city ? city + ", " : ""}${country}<br>
-        <small>${lat.toFixed(4)}, ${lon.toFixed(4)}</small><br>
-         <small>Accuracy: ${accuracy.toFixed(1)} meters </small>
+          <b>Your Location:</b><br>
+          ${city ? city + ", " : ""}${country}<br>
+          <small>${lat.toFixed(4)}, ${lon.toFixed(4)}</small><br>
+           <small>Accuracy: ${accuracy.toFixed(1)} meters </small>
 
-      `
+        `
                   )
                   .openPopup();
               })
@@ -822,27 +822,19 @@
         const area = calculateArea(points);
         const centroid = calculateCentroid(points);
 
-        // Function that will be called from Android
-function setFarmerDetails(farmerName, plotAddress) {
-    // Handle the received data
-    console.log("Received:", farmerName, plotAddress);
-}
+        // Fetch farmer details from Android using the JavaScript interface
+        const farmerName = window.Android.getFarmerName();
+        const plotAddress = window.Android.getPlotAddress();
 
+        console.log("Farmer Name: ", farmerName);
+        console.log("Plot Address: ", plotAddress);
 
-    setTimeout(() => {
-    const farmerName = window.Android.getFarmerName();
-    const plotAddress = window.Android.getPlotAddress();
-    console.log("Farmer Name: ", farmerName);
-    console.log("Plot Address: ", plotAddress);
-}, 500); // Adjust delay if necessary
-
-
-    if (!farmerName || !plotAddress) {
-        console.error("Farmer Name or Plot Address is empty.");
-        return;
-    }
-
-
+        if (!farmerName || !plotAddress) {
+          alert(
+            "Farmer Name or Plot Address is missing. Please provide the details."
+          );
+          return;
+        }
 
         const plotData = {
           name: "Polygon " + new Date().toISOString(), // Name with timestamp
@@ -855,8 +847,10 @@ function setFarmerDetails(farmerName, plotAddress) {
           plotAddress: plotAddress,
         };
 
-          // Send data to Android (using a JavaScript interface)
-         window.Android.saveDataToRoom(JSON.stringify(plotData));
+        console.log("Plot Data to Save:", plotData);
+
+        // Send data to Android (using the JavaScript interface)
+        window.Android.saveDataToRoom(JSON.stringify(plotData));
 
         // Reset buttons after saving
         const startButton = document.getElementById("startCapture");
@@ -875,11 +869,56 @@ function setFarmerDetails(farmerName, plotAddress) {
           )}, ${centroid.lng.toFixed(6)}`
         );
       });
+
     });
 
+    function notifyAndroid(message) {
+        if (typeof Android !== "undefined" && Android.onNotify) {
+          Android.onNotify(message);
+        } else {
+          console.error("Android interface not available");
+        }
+      }
 
+    function sendPlotDataToAndroid() {
+      console.log("Points array:", points);
+      if (points.length < 3) {
+        alert("Please capture at least 3 points to form a valid polygon");
+        return;
+      }
 
+      const area = calculateArea(points);
+      const centroid = calculateCentroid(points);
+
+      const plotData = {
+        name: "Polygon " + new Date().toISOString(),
+        area: area,
+        centroidLat: centroid.lat,
+        centroidLng: centroid.lng,
+        points: points.map((point) => ({ lat: point.lat, lng: point.lng })),
+        accuracy: currentAccuracy,
+      };
+
+      console.log("Sending Plot Data to Android:", plotData);
+
+      // Send data to Android
+      if (typeof Android !== "undefined" && Android.receivePlotData) {
+        Android.receivePlotData(JSON.stringify(plotData));
+      } else {
+        console.error("Android interface not available");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      console.log("DOM fully loaded and parsed");
+      const button = document.getElementById("sendButton");
+      if (button) {
+        console.log("Button found, adding event listener");
+        button.addEventListener("click", sendPlotDataToAndroid);
+      } else {
+        console.error("Button with id 'sendButton' not found.");
+      }
+    });
 </script>
 </body>
 </html>
-

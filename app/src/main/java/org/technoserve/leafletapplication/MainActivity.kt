@@ -63,55 +63,73 @@ var loadURL = "file:///android_asset/leaflet_map.html"
 
 
 // JavaScript Interface
-class JavaScriptInterface(private val context: Context) {
+class JavaScriptInterface(
+    private val context: Context,
+    private val farmerName: () -> String,
+    private val plotAddress: () -> String
+) {
 
-    private var farmerName: String = ""
-    private var plotAddress: String = ""
 
-    @android.webkit.JavascriptInterface
-    fun saveDataToRoom(plotDataJson: String) {
-        val plotData = Gson().fromJson(plotDataJson, PlotData::class.java)
+    @JavascriptInterface
+    fun receivePlotData(plotDataJson: String) {
+        val gson = Gson()
+        val plotData = gson.fromJson(plotDataJson, PlotData::class.java)
 
-        (context as MainActivity).lifecycleScope.launch {
+        Log.d("JavaScriptInterface", "Received Plot Data: $plotData")
+
+        // Retrieve the form data
+        val farmer = farmerName.invoke()
+        val address = plotAddress.invoke()
+
+        Log.d("JavaScriptInterface", "Form Data: Farmer Name - $farmer, Plot Address - $address")
+
+        (context as? MainActivity)?.lifecycleScope?.launch {
             val plotDao = PlotDatabase.getDatabase(context).plotDao()
+
+            // Combine form data with plot data
             val plotEntity = PlotEntity(
+                name = plotData.name,
                 area = plotData.area,
                 centroidLat = plotData.centroidLat,
                 centroidLng = plotData.centroidLng,
-                points = Gson().toJson(plotData.points), // Convert list to JSON string
+                points = gson.toJson(plotData.points), // Convert points to JSON string
                 accuracy = plotData.accuracy,
-                farmerName = plotData.farmerName,
-                plotAddress = plotData.plotAddress
+                farmerName = farmer,
+                plotAddress = address
             )
+
+            // Save to the database
             plotDao.insertPlot(plotEntity)
+            Log.d("JavaScriptInterface", "Plot Data with Form Details saved to database.")
         }
     }
 
-    @android.webkit.JavascriptInterface
+    @JavascriptInterface
+    fun saveDataToRoom(plotDataJson: String) {
+        val plotData = Gson().fromJson(plotDataJson, PlotData::class.java)
+        Log.d("JavaScriptInterface", "Saving Plot Data: $plotData")
+
+//        (context as? MainActivity)?.lifecycleScope?.launch {
+//            val plotDao = PlotDatabase.getDatabase(context).plotDao()
+//            val plotEntity = PlotEntity(
+//                name = plotData.name,
+//                area = plotData.area,
+//                centroidLat = plotData.centroidLat,
+//                centroidLng = plotData.centroidLng,
+//                points = Gson().toJson(plotData.points), // Convert points back to JSON string
+//                accuracy = plotData.accuracy,
+//                farmerName = plotData.farmerName,
+//                plotAddress = plotData.plotAddress
+//            )
+//            plotDao.insertPlot(plotEntity)
+//            Log.d("JavaScriptInterface", "Plot saved to database")
+//        }
+    }
+
+    @JavascriptInterface
     fun getPlots(): String {
         return Gson().toJson(PlotDatabase.getDatabase(context).plotDao().getAllPlots())
     }
-
-    @JavascriptInterface
-    fun setFarmerDetails(name: String, address: String) {
-        farmerName = name
-        plotAddress = address
-        Log.d("JavaScriptInterface", "Farmer Name: $farmerName, Plot Address: $plotAddress")
-    }
-
-    @JavascriptInterface
-    fun getFarmerName(): String {
-        Log.d("JavaScriptInterface", "Returning Farmer Name: $farmerName")
-        return farmerName
-    }
-
-    @JavascriptInterface
-    fun getPlotAddress(): String {
-        Log.d("JavaScriptInterface", "Returning Plot Address: $plotAddress")
-        return plotAddress
-    }
-
-
 }
 
 class MainActivity : ComponentActivity() {
@@ -152,7 +170,7 @@ class MainActivity : ComponentActivity() {
 
                 // Load the appropriate view based on the toggle
                 if (showVisualization) {
-                    PlotVisualizationApp(plotViewModel)
+                    // PlotVisualizationApp(plotViewModel)
                 } else {
                     // WebViewPage(loadURL)
                     WebViewPageWithForm(loadURL)
@@ -316,8 +334,15 @@ fun WebViewPageWithForm(url: String) {
                         }
                     }
 
-                    // Attach JavaScript interface for Android-JavaScript communication
-                    addJavascriptInterface(JavaScriptInterface(context), "Android")
+                    // Attach JavaScript interface with form data lambdas
+                    addJavascriptInterface(
+                        JavaScriptInterface(
+                            context = context,
+                            farmerName = { farmerName },
+                            plotAddress = { plotAddress }
+                        ),
+                        "Android"
+                    )
 
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView?, url: String?) {
@@ -386,8 +411,9 @@ fun WebViewPageWithForm(url: String) {
 
                         webView?.evaluateJavascript(
                             """
-    Android.setFarmerDetails("${farmerName.escapeJavaScript()}", "${plotAddress.escapeJavaScript()}");
-    """.trimIndent()
+                    Android.setFarmerDetails("${farmerName.escapeJavaScript()}", "${plotAddress.escapeJavaScript()}");
+                    notifyAndroid("Details sent: Farmer Name - ${farmerName.escapeJavaScript()}, Plot Address - ${plotAddress.escapeJavaScript()}");
+                    """.trimIndent()
                         ) { result ->
                             Log.d("WebView", "JavaScript execution result: $result")
                         }
@@ -401,8 +427,8 @@ fun WebViewPageWithForm(url: String) {
             ) {
                 Text("Submit")
             }
-
         }
+
     }
 }
 
@@ -438,130 +464,130 @@ private fun getCachedResponse(context: Context, url: String): WebResourceRespons
     return null
 }
 
-@Composable
-fun WebViewWithVisualization(dataJson: String) {
-    val context = LocalContext.current
-    var backEnabled by remember { mutableStateOf(false) }
-    var webView: WebView? = null
+//@Composable
+//fun WebViewWithVisualization(dataJson: String) {
+//    val context = LocalContext.current
+//    var backEnabled by remember { mutableStateOf(false) }
+//    var webView: WebView? = null
+//
+//    println("Data JSON: $dataJson")
+//
+//    AndroidView(
+//        factory = { ctx ->
+//            WebView(ctx).apply {
+//                layoutParams = ViewGroup.LayoutParams(
+//                    ViewGroup.LayoutParams.MATCH_PARENT,
+//                    ViewGroup.LayoutParams.MATCH_PARENT
+//                )
+//
+//                // Enable JavaScript and other settings
+//                settings.apply {
+//                    javaScriptEnabled = true
+//                    domStorageEnabled = true
+//                    setGeolocationEnabled(true)
+//                    builtInZoomControls = true
+//                    displayZoomControls = false
+//                    allowFileAccess = true
+//                    allowContentAccess = true
+//                    loadWithOverviewMode = true
+//                    useWideViewPort = true
+//                    cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+//                    databaseEnabled = true
+//                }
+//
+//                webChromeClient = object : WebChromeClient() {
+//                    override fun onGeolocationPermissionsShowPrompt(
+//                        origin: String,
+//                        callback: GeolocationPermissions.Callback
+//                    ) {
+//                        callback.invoke(origin, true, false)
+//                    }
+//                }
+//
+//                addJavascriptInterface(JavaScriptInterface(context), "Android")
+//
+//                webViewClient = object : WebViewClient() {
+//                    override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
+//                        super.onPageStarted(view, url, favicon)
+//                        backEnabled = view.canGoBack()
+//                    }
+//
+//                    override fun shouldInterceptRequest(
+//                        view: WebView?,
+//                        request: WebResourceRequest?
+//                    ): WebResourceResponse? {
+//                        val url = request?.url.toString()
+//                        val cachedResponse = getCachedResponse(context, url)
+//                        return cachedResponse ?: super.shouldInterceptRequest(view, request)
+//                    }
+//
+//                    override fun onPageFinished(view: WebView?, url: String?) {
+//                        super.onPageFinished(view, url)
+//                        view?.evaluateJavascript(
+//                            """
+//        if (typeof visualizeData === 'function') {
+//            visualizeData(${dataJson});
+//        } else {
+//            console.error('visualizeData is not defined');
+//        }
+//        """.trimIndent(),
+//                            null
+//                        )
+//                    }
+//
+//                }
+//
+//                // Load the URL
+//                loadUrl("file:///android_asset/index.html")
+//                webView = this
+//            }
+//        },
+//        modifier = Modifier.fillMaxSize(),
+//        update = { webView ->
+//            // Optionally reinject data
+//            webView.evaluateJavascript(
+//                "if (typeof visualizeData === 'function') { visualizeData(${dataJson}); } else { console.error('visualizeData is not defined'); }",
+//                null
+//            )
+//        }
+//    )
+//
+//    // Handle back navigation
+//    BackHandler(enabled = backEnabled) {
+//        webView?.goBack()
+//    }
+//}
 
-    println("Data JSON: $dataJson")
 
-    AndroidView(
-        factory = { ctx ->
-            WebView(ctx).apply {
-                layoutParams = ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.MATCH_PARENT
-                )
-
-                // Enable JavaScript and other settings
-                settings.apply {
-                    javaScriptEnabled = true
-                    domStorageEnabled = true
-                    setGeolocationEnabled(true)
-                    builtInZoomControls = true
-                    displayZoomControls = false
-                    allowFileAccess = true
-                    allowContentAccess = true
-                    loadWithOverviewMode = true
-                    useWideViewPort = true
-                    cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
-                    databaseEnabled = true
-                }
-
-                webChromeClient = object : WebChromeClient() {
-                    override fun onGeolocationPermissionsShowPrompt(
-                        origin: String,
-                        callback: GeolocationPermissions.Callback
-                    ) {
-                        callback.invoke(origin, true, false)
-                    }
-                }
-
-                addJavascriptInterface(JavaScriptInterface(context), "Android")
-
-                webViewClient = object : WebViewClient() {
-                    override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
-                        super.onPageStarted(view, url, favicon)
-                        backEnabled = view.canGoBack()
-                    }
-
-                    override fun shouldInterceptRequest(
-                        view: WebView?,
-                        request: WebResourceRequest?
-                    ): WebResourceResponse? {
-                        val url = request?.url.toString()
-                        val cachedResponse = getCachedResponse(context, url)
-                        return cachedResponse ?: super.shouldInterceptRequest(view, request)
-                    }
-
-                    override fun onPageFinished(view: WebView?, url: String?) {
-                        super.onPageFinished(view, url)
-                        view?.evaluateJavascript(
-                            """
-        if (typeof visualizeData === 'function') {
-            visualizeData(${dataJson});
-        } else {
-            console.error('visualizeData is not defined');
-        }
-        """.trimIndent(),
-                            null
-                        )
-                    }
-
-                }
-
-                // Load the URL
-                loadUrl("file:///android_asset/index.html")
-                webView = this
-            }
-        },
-        modifier = Modifier.fillMaxSize(),
-        update = { webView ->
-            // Optionally reinject data
-            webView.evaluateJavascript(
-                "if (typeof visualizeData === 'function') { visualizeData(${dataJson}); } else { console.error('visualizeData is not defined'); }",
-                null
-            )
-        }
-    )
-
-    // Handle back navigation
-    BackHandler(enabled = backEnabled) {
-        webView?.goBack()
-    }
-}
-
-
-@Composable
-fun PlotVisualizationApp(plotViewModel: PlotViewModel) {
-    val plots by plotViewModel.allPlots.observeAsState(emptyList())
-
-    println("Plots: $plots")
-
-    if (plots.isNotEmpty()) {
-        val plotsJson = Gson().toJson(plots.map {
-            mapOf(
-                "area" to it.area,
-                "centroidLat" to it.centroidLat,
-                "centroidLng" to it.centroidLng,
-                "points" to Gson().fromJson(it.points, List::class.java),
-                "accuracy" to it.accuracy,
-                "farmerName" to it.farmerName,
-                "plotAddress" to it.plotAddress
-            )
-        })
-        println("Plots JSON: $plotsJson")
-
-        WebViewWithVisualization(dataJson = plotsJson)
-    } else {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = "Loading plots...", style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
+//@Composable
+//fun PlotVisualizationApp(plotViewModel: PlotViewModel) {
+//    val plots by plotViewModel.allPlots.observeAsState(emptyList())
+//
+//    println("Plots: $plots")
+//
+//    if (plots.isNotEmpty()) {
+//        val plotsJson = Gson().toJson(plots.map {
+//            mapOf(
+//                "area" to it.area,
+//                "centroidLat" to it.centroidLat,
+//                "centroidLng" to it.centroidLng,
+//                "points" to Gson().fromJson(it.points, List::class.java),
+//                "accuracy" to it.accuracy,
+////                "farmerName" to it.farmerName,
+////                "plotAddress" to it.plotAddress
+//            )
+//        })
+//        println("Plots JSON: $plotsJson")
+//
+//        WebViewWithVisualization(dataJson = plotsJson)
+//    } else {
+//        Box(
+//            modifier = Modifier.fillMaxSize(),
+//            contentAlignment = Alignment.Center
+//        ) {
+//            Text(text = "Loading plots...", style = MaterialTheme.typography.bodySmall)
+//        }
+//    }
+//}
 
 

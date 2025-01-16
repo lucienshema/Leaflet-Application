@@ -32,7 +32,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 //    }
 //}
 
-@Database(entities = [PlotEntity::class], version = 3, exportSchema = false)
+@Database(entities = [PlotEntity::class], version = 4, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class PlotDatabase : RoomDatabase() {
     abstract fun plotDao(): PlotDao

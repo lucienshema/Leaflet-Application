@@ -54,6 +54,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import org.technoserve.leafletapplication.map.PlotData
 import org.technoserve.leafletapplication.map.PlotDatabase
+import org.technoserve.leafletapplication.map.PlotDetailsForm
 import org.technoserve.leafletapplication.map.PlotEntity
 import org.technoserve.leafletapplication.map.PlotViewModel
 import java.io.File
@@ -173,7 +174,7 @@ class MainActivity : ComponentActivity() {
                     // PlotVisualizationApp(plotViewModel)
                 } else {
                     // WebViewPage(loadURL)
-                    WebViewPageWithForm(loadURL)
+                    WebViewPageWithForm(loadURL,plotViewModel)
                 }
             }
 
@@ -292,7 +293,7 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun WebViewPageWithForm(url: String) {
+fun WebViewPageWithForm(url: String, plotViewModel: PlotViewModel ) {
     val context = LocalContext.current
     var farmerName by remember { mutableStateOf("") }
     var plotAddress by remember { mutableStateOf("") }
@@ -368,66 +369,69 @@ fun WebViewPageWithForm(url: String) {
             webView?.goBack()
         }
 
+//        // Overlay form for adding plot details
+//        Column(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .background(Color.White.copy(alpha = 0.9f))
+//                .padding(16.dp),
+//            verticalArrangement = Arrangement.spacedBy(8.dp)
+//        ) {
+//            Text(
+//                text = "Add Plot Details",
+//                style = MaterialTheme.typography.headlineSmall,
+//                modifier = Modifier.align(Alignment.CenterHorizontally)
+//            )
+//
+//            OutlinedTextField(
+//                value = farmerName,
+//                onValueChange = { farmerName = it },
+//                label = { Text("Farmer Name") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            OutlinedTextField(
+//                value = plotAddress,
+//                onValueChange = { plotAddress = it },
+//                label = { Text("Plot Address") },
+//                modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            fun String.escapeJavaScript(): String {
+//                return this.replace("\\", "\\\\")
+//                    .replace("\"", "\\\"")
+//                    .replace("\n", "\\n")
+//                    .replace("\r", "\\r")
+//                    .replace("\t", "\\t")
+//            }
+//
+//            Button(
+//                onClick = {
+//                    if (farmerName.isNotEmpty() && plotAddress.isNotEmpty()) {
+//                        Log.d("Farmer Info", "Farmer Name: $farmerName, Plot Address: $plotAddress")
+//
+//                        webView?.evaluateJavascript(
+//                            """
+//                    Android.setFarmerDetails("${farmerName.escapeJavaScript()}", "${plotAddress.escapeJavaScript()}");
+//                    notifyAndroid("Details sent: Farmer Name - ${farmerName.escapeJavaScript()}, Plot Address - ${plotAddress.escapeJavaScript()}");
+//                    """.trimIndent()
+//                        ) { result ->
+//                            Log.d("WebView", "JavaScript execution result: $result")
+//                        }
+//                        Log.d("EvaluateJavascript", "Command sent to WebView: Android.setFarmerDetails('$farmerName', '$plotAddress')")
+//                    } else {
+//                        Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+//                    }
+//
+//                },
+//                modifier = Modifier.align(Alignment.End)
+//            ) {
+//                Text("Submit")
+//            }
+//        }
+
         // Overlay form for adding plot details
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White.copy(alpha = 0.9f))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "Add Plot Details",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
-
-            OutlinedTextField(
-                value = farmerName,
-                onValueChange = { farmerName = it },
-                label = { Text("Farmer Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = plotAddress,
-                onValueChange = { plotAddress = it },
-                label = { Text("Plot Address") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            fun String.escapeJavaScript(): String {
-                return this.replace("\\", "\\\\")
-                    .replace("\"", "\\\"")
-                    .replace("\n", "\\n")
-                    .replace("\r", "\\r")
-                    .replace("\t", "\\t")
-            }
-
-            Button(
-                onClick = {
-                    if (farmerName.isNotEmpty() && plotAddress.isNotEmpty()) {
-                        Log.d("Farmer Info", "Farmer Name: $farmerName, Plot Address: $plotAddress")
-
-                        webView?.evaluateJavascript(
-                            """
-                    Android.setFarmerDetails("${farmerName.escapeJavaScript()}", "${plotAddress.escapeJavaScript()}");
-                    notifyAndroid("Details sent: Farmer Name - ${farmerName.escapeJavaScript()}, Plot Address - ${plotAddress.escapeJavaScript()}");
-                    """.trimIndent()
-                        ) { result ->
-                            Log.d("WebView", "JavaScript execution result: $result")
-                        }
-                        Log.d("EvaluateJavascript", "Command sent to WebView: Android.setFarmerDetails('$farmerName', '$plotAddress')")
-                    } else {
-                        Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
-                    }
-
-                },
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text("Submit")
-            }
-        }
+        PlotDetailsForm(webView, plotViewModel)
 
     }
 }

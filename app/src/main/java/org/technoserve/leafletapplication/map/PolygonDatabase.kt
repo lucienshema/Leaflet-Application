@@ -32,7 +32,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 //    }
 //}
 
-@Database(entities = [PlotEntity::class], version = 4, exportSchema = false)
+@Database(entities = [PlotEntity::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class PlotDatabase : RoomDatabase() {
     abstract fun plotDao(): PlotDao
@@ -46,7 +46,7 @@ abstract class PlotDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     PlotDatabase::class.java,
-                    "plot_database"
+                    "plot_database_v2"
                 ).fallbackToDestructiveMigration()
                     //.addMigrations(MIGRATION_1_2) // Add migration strategy
                 .build()

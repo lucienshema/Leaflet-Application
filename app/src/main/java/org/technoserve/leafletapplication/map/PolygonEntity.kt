@@ -7,8 +7,8 @@ data class PlotData(
     val centroidLng: Double,
     val points: List<Point>, // Assuming points is a list of custom objects
     val accuracy: Float,
-//    val farmerName: String,
-//    val plotAddress: String
+    val farmerName: String,
+    val plotAddress: String
 )
 
 data class Point(

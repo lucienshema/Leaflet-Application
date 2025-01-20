@@ -1,5 +1,6 @@
 package org.technoserve.leafletapplication.map
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 
 @Entity(tableName = "plot_table")
@@ -35,9 +36,10 @@ data class PlotEntity(
 
 @Dao
 interface PlotDao {
-    @Insert
-    suspend fun insertPlot(plotEntity: PlotEntity): Long
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPlot(plot: PlotEntity)
 
     @Query("SELECT * FROM plot_table")
-    fun getAllPlots(): List<PlotEntity>
+    fun getAllPlots(): LiveData<List<PlotEntity>>
+
 }

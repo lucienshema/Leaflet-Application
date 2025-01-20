@@ -880,6 +880,32 @@
         }
       }
 
+      function getPlotData() {
+        if (points.length < 3) {
+            console.error("Not enough points to form a valid polygon");
+            return null;
+        }
+
+        const area = calculateArea(points);
+        const centroid = calculateCentroid(points);
+
+        const plotData = {
+            name: "Polygon " + new Date().toISOString(),
+            area: area,
+            centroidLat: centroid.lat,
+            centroidLng: centroid.lng,
+            points: points.map((point) => ({ lat: point.lat, lng: point.lng })),
+            accuracy: currentAccuracy
+        };
+
+        console.log("Returning Plot Data:", plotData);
+        return JSON.stringify(plotData); // Ensure data is JSON-encoded
+    }
+
+
+
+
+
     function sendPlotDataToAndroid() {
       console.log("Points array:", points);
       if (points.length < 3) {
